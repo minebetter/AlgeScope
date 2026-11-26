@@ -1,0 +1,48 @@
+# Meta-Template: Transformations on a 2x2 Character Grid
+name: "Transformations on a 2x2 Character Grid"
+description: "A system where the elements represent the set of rotations and reflections that can be applied to a 2x2 character block (like 'ab;cd'). The operation is the composition of these transformations."
+demo_instances:
+  -  op_symbol: "@"
+
+set:
+  definition: "The set of 8 named symmetry transformations (rotations and reflections) applicable to a 2x2 character grid."
+  # Elements: R0 (no change), R90/R180/R270 (rotations), H/V (flips), D1/D2 (diagonal flips)
+  elements: ["R0", "R90", "R180", "R270", "H", "V", "D1", "D2"]
+  validator: { type: "finite_set_validator", params: { elements: ["R0", "R90", "R180", "R270", "H", "V", "D1", "D2"] } }
+  sampler: { type: "finite_set_sampler", params: { elements: ["R0", "R90", "R180", "R270", "H", "V", "D1", "D2"] } }
+
+signature:
+  - name: "Compose"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "table_lookup_2d"
+      params:
+        elements: ["R0", "R90", "R180", "R270", "H", "V", "D1", "D2"]
+        table: { generator: "dihedral_group_table", params: { n_gon: 4 } }
+        
+  - name: "Inverse"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "table_lookup_1d"
+      params:
+        elements: ["R0", "R90", "R180", "R270", "H", "V", "D1", "D2"]
+        table: { generator: "group_inverse_table", params: { table: { generator: "dihedral_group_table", params: { n_gon: 4 } }, identity_index: 0 } }
+
+  - name: "Identity"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "R0" } }
+
+rules_template: >
+  This system describes how transformations on a square grid combine with each other.
+
+  - **Element Meanings**: R_ denotes rotation, H is a horizontal flip, V is a vertical flip, and D_ are flips across the diagonals.
+  - **Core Operation ({op_symbol})**: `T1 {op_symbol} T2` means you apply transformation T2 *first*, then apply transformation T1 to the result.
+    - Example: First apply a Horizontal Flip (H), then a 90-degree Rotation (R90). The final result is equivalent to a flip across the main diagonal (D1). Therefore, `R90 {op_symbol} H = D1`.
+
+  - **How to solve the equation `A {op_symbol} x = B`**:
+    - **Principle**: The unknown transformation `x` can be found by applying the inverse: `x = inv(A) {op_symbol} B`.
+    - **Solving**: To find `x` in `'R90' {op_symbol} x = 'D1'`, you would calculate `inv('R90') {op_symbol} 'D1'`. Since `inv('R90')` is `R270`, the calculation becomes `R270 {op_symbol} 'D1'`, which results in `H`. Therefore, `x = H`.

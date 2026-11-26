@@ -1,0 +1,37 @@
+# Meta-Template: UI Feature Toggle System
+name: "UI Feature Toggle System ({n} features)"
+description: "A system where an element represents the state of multiple boolean feature toggles (enabled/disabled) in a user interface."
+demo_instances:
+  - n: 8 # e.g., for a settings panel with 8 toggles
+  - n: 5
+
+set:
+  definition: "All strings of length {n} composed of 'T' (True) and 'F' (False)."
+  validator: { type: "regex", params: { pattern: "^[TF]{{{n}}}$" } }
+  sampler: { type: "random_string", params: { alphabet: "TF", min_len: "{n}", max_len: "{n}" } }
+
+signature:
+  - name: "Combine States"
+    symbol: "⊕"
+    arity: 2
+    precedence: 1
+    logic: { type: "charwise_boolean_xor_logic", params: { true_char: "T", false_char: "F" } }
+  - name: "Inverse State (Self)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+
+rules_template: >
+  This system models the combination of UI state changes. `State1 ⊕ State2` is equivalent to applying a 'toggle mask'.
+
+  - **Core Operation (⊕)**: A `true` ('T') in the second state toggles the corresponding feature in the first state. A `false` ('F') leaves it unchanged.
+    - Example (n=4): `'TFFT' ⊕ 'FTFT'` represents:
+      - Feature 1: T ⊕ F -> T (unchanged)
+      - Feature 2: F ⊕ T -> T (toggled)
+      - Feature 3: F ⊕ F -> F (unchanged)
+      - Feature 4: T ⊕ T -> F (toggled)
+      - Result: `'TTFF'`
+
+  - **How to solve for an unknown change `Initial_State ⊕ x = Final_State`**:
+    - **Principle**: The required change `x` is found by calculating `x = Initial_State ⊕ Final_State`.
+    - **Solving**: This tells you exactly which features need to be toggled to get from the initial state to the final state.

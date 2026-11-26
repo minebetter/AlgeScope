@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+/data/
+/outputs/
+/external/
+*.parquet
+*.jsonl
+!Algebrarium/case-verify/*.jsonl
+*.safetensors
+*.pt
+*.log
+.env
+.env.*

@@ -1,0 +1,39 @@
+# Meta-Template: Unix File Permission Mask System
+name: "Unix File Permission Mask System"
+description: "An algebraic system where elements are Unix-style file permission masks (e.g., 'rwx'). The operation applies a mask to toggle permissions."
+demo_instances:
+  - op_symbol: "chmod"
+
+set:
+  definition: "All 3-character strings composed of 'r', 'w', 'x', and '-' representing read/write/execute permissions."
+  # This regex ensures order r, then w, then x, or '-'
+  validator: { type: "regex", params: { pattern: "^(r|-)(w|-)(x|-)$" } }
+  sampler: { type: "permission_mask_sampler" }
+
+signature:
+  - name: "Apply Mask"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "permission_mask_apply_logic" }
+  - name: "Inverse Mask (Self)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+  - name: "Identity (No Permissions)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "---" } }
+
+rules_template: >
+  This system models how a `{op_symbol}` mask toggles file permissions.
+
+  - **Core Operation ({op_symbol})**: `perm_current {op_symbol} mask` toggles the permission bits in `perm_current` that are specified in the `mask`.
+    - Example: `'rw-' {op_symbol} '-w-'` results in `'r--'` (the 'w' permission was toggled off).
+    - Example: `'r--' {op_symbol} '-wx'` results in `'rwx'` (the 'w' and 'x' permissions were toggled on).
+
+  - **Inverse Property**: Every mask is its own inverse. `mask {op_symbol} mask = '---'` (no net change). Applying the same mask twice reverts to the original state.
+
+  - **How to solve the equation `Initial_Perm {op_symbol} x = Final_Perm`**:
+    - **Principle**: `x = Initial_Perm {op_symbol} Final_Perm`.
+    - **Solving**: If you know a file's initial permissions and the desired final permissions, you can calculate the exact mask `x` needed to achieve that change in a single operation.

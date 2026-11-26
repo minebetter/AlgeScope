@@ -1,0 +1,47 @@
+# Meta-Template: Enigma 3-Rotor State System (Simplified)
+name: "Enigma 3-Rotor State System"
+description: "A system where an element represents the rotational state of the three rotors in an Enigma machine. The operation is the independent composition of these rotations."
+demo_instances:
+  - op_symbol: "$"
+
+set:
+  definition: "A string like 'A,B,C', representing the rotational state of the three rotors (A=0, B=1, ...)."
+  validator: { type: "regex", params: { pattern: "^[A-Z],[A-Z],[A-Z]$" } }
+  sampler: { type: "enigma_rotor_sampler" }
+
+signature:
+  - name: "Combine Rotations"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "rotor_state_add_logic" }
+  - name: "Inverse Rotation"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "rotor_state_inverse_logic" }
+  - name: "Identity (Initial State)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "A,A,A" } }
+
+rules_template: >
+  This system models the gross rotational state of the Enigma rotors, ignoring the complex stepping mechanism and wiring. It is a commutative system.
+
+  - **Core Operation ({op_symbol})**: `State1 {op_symbol} State2` combines two states by performing addition modulo 26 independently for each of the three rotor positions.
+    - **Example**: `'A,C,Z' {op_symbol} 'B,B,C'`
+    - **Calculation**:
+      - Rotor 1: (A {op_symbol} B) mod 26 = (0 {op_symbol} 1) mod 26 = 1 -> 'B'
+      - Rotor 2: (C {op_symbol} B) mod 26 = (2 {op_symbol} 1) mod 26 = 3 -> 'D'
+      - Rotor 3: (Z {op_symbol} C) mod 26 = (25 {op_symbol} 2) mod 26 = 1 -> 'B'
+    - **Result**: `'B,D,B'`
+
+  - **Inverse (inv)**: `inv(State)` is the "counter-rotation" that cancels the effect of the given state rotation.
+    - **Example**: `inv('B,A,D')` (inverse of state 1,0,3) is (-1,-0,-3) mod 26, which corresponds to (25,0,23) -> `'Z,A,X'`.
+
+  - **How to solve for an unknown rotation `Rot1 {op_symbol} x = Rot2`**:
+    - **Principle**: `x = inv(Rot1) {op_symbol} Rot2`.
+    - **Solving for x in `'A,C,Z' {op_symbol} x = 'B,D,B'`**:
+    - **Calculation**: `x = inv('A,C,Z') {op_symbol} 'B,D,B'`.
+      - `inv(0,2,25)` is `(0,24,1)` -> `'A,Y,B'`.
+      - `'A,Y,B' {op_symbol} 'B,D,B'` is `(0{op_symbol}1, 24{op_symbol}3, 1{op_symbol}1)` mod 26 -> `(1, 27 mod 26, 2)` -> `(1,1,2)`.
+    - **Result**: `x` is `'B,B,C'`.

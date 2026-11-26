@@ -1,0 +1,40 @@
+# Meta-Template: 2x2 Cube Top Layer Rotations
+name: "2x2 Cube Top Layer Rotations"
+description: "A system of operations for the top layer of a 2x2 cube, including clockwise (U), counter-clockwise (U'), and 180-degree (U2) turns."
+demo_instances:
+  - op_symbol: "∘"
+
+set:
+  definition: "The set of top-layer turn operations: 'U' (clockwise 90°), 'U2' (180°), 'U_prime' (counter-clockwise 90°), and 'ID' (no turn)."
+  
+  validator: { type: "finite_set_validator", params: { elements: ["ID", "U", "U2", "U_prime"] } }
+  sampler: { type: "finite_set_sampler", params: { elements: ["ID", "U", "U2", "U_prime"] } }
+
+signature:
+  - name: "Compose Turns"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "table_lookup_2d"
+      params:
+        elements: ["ID", "U", "U2", "U_prime"]
+        # Corresponds to 0, 1, 2, 3 with addition mod 4
+        table: [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2]]
+  - name: "Inverse Turn"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "table_lookup_1d"
+      params:
+        elements: ["ID", "U", "U2", "U_prime"]
+        table: [0, 3, 2, 1] # inv(ID)=ID, inv(U)=U_prime, inv(U2)=U2, inv(U_prime)=U
+
+rules_template: >
+  This system models how consecutive turns of the top layer of a cube combine.
+
+  - **Core Operation ({op_symbol})**: `U {op_symbol} U` is equivalent to a single `U2` turn. `U {op_symbol} U_prime` cancels out, resulting in `ID` (no net change).
+
+  - **How to solve for an unknown turn `U {op_symbol} x = U_prime`**:
+    - **Principle**: The unknown turn `x` is found by calculating `x = inv(U) {op_symbol} U_prime`.
+    - **Solving**: Since the inverse of `U` is `U_prime`, this becomes `U_prime {op_symbol} U_prime`, which results in `U2`.

@@ -1,0 +1,47 @@
+# Meta-Template: Coffee Recipe Delta System
+name: "Coffee Recipe Delta System"
+description: "A system where elements are incremental modifications to a coffee recipe (e.g., adding sugar, milk). The operation combines these modifications."
+demo_instances:
+  - op_symbol: "#"
+    
+
+set:
+  definition: "Key-value pair strings describing recipe modifications, like 'sugar:2,milk:1'."
+  validator: { type: "regex", params: { pattern: "^([a-zA-Z]+:-?[0-9.]+,)*([a-zA-Z]+:-?[0-9.]+)$|^$" } }
+  
+  sampler:
+    type: "key_value_sampler"
+    params:
+      keys: ["sugar", "milk", "espresso", "water", "foam"]
+      min_val: -200
+      max_val: 200
+      min_keys: 1
+      max_keys: 4
+      val_is_int: True
+
+signature:
+  - name: "Combine Deltas"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "key_value_additive_merge_logic" }
+    
+  - name: "Reverse Delta"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "key_value_additive_inverse_logic" }
+
+  - name: "Identity (No Change)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models the step-by-step construction or modification of a recipe.
+
+  - **Core Operation ({op_symbol})**: Combining two deltas adds their component values.
+    - Example: `'sugar:1,milk:1' {op_symbol} 'sugar:1,espresso:1'` results in `'espresso:1,milk:1,sugar:2'`, representing the net change.
+
+  - **How to solve for an unknown modification `Base_Mod {op_symbol} x = Final_Mod`**:
+    - **Principle**: The required modification `x` is found by calculating `x = inv(Base_Mod) {op_symbol} Final_Mod`.
+    - **Solving**: If you have a base set of modifications and a desired final set, this allows you to compute the exact additional changes (`x`) needed to get there. For instance, `inv('sugar:1')` is `'sugar:-1'`.

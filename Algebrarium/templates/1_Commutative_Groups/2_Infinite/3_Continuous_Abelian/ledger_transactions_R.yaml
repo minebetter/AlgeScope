@@ -1,0 +1,34 @@
+# Meta-Template: Ledger Transaction System
+name: "Personal Ledger Transaction System"
+description: "A system where an element is a single financial transaction (e.g., 'DEPOSIT_100', 'WITHDRAW_50')."
+demo_instances:
+  - op_symbol: "&"
+
+set:
+  definition: "Strings formatted as 'ACTION_AMOUNT', such as 'PAY_25'."
+  validator: { type: "transaction_validator" }
+  sampler: { type: "transaction_sampler" }
+
+signature:
+  - name: "Combine Transactions"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "transaction_compose_logic" } # Sums the net amounts
+  - name: "Reverse Transaction"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "transaction_inverse_logic" } # Flips DEPOSIT <-> WITHDRAW
+  - name: "Identity (No Transaction)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "NO_OP_0" } }
+
+rules_template: >
+  This system models how financial transactions combine, where the total effect is the net change in balance.
+
+  - **Core Operation ({op_symbol})**: `DEPOSIT_100 {op_symbol} WITHDRAW_30` results in a net effect of `DEPOSIT_70`.
+
+  - **How to solve for an unknown transaction `T_known {op_symbol} x = T_final`**:
+    - **Principle**: `x = inv(T_known) {op_symbol} T_final`.
+    - **Solving**: This allows you to calculate the single transaction `x` needed to get from the net effect of `T_known` to the net effect of `T_final`. For instance, to solve `DEPOSIT_100 {op_symbol} x = DEPOSIT_70`, you calculate `x = inv(DEPOSIT_100) {op_symbol} DEPOSIT_70`, which is `WITHDRAW_100 {op_symbol} DEPOSIT_70`, resulting in `WITHDRAW_30`.

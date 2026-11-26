@@ -1,0 +1,65 @@
+File: symmetric_group_s3_cycle_notation.yaml
+# Meta-Template: The Symmetric Group S₃ with Cycle Notation
+name: "The Symmetric Group on 3 elements (S₃) with Cycle Notation"
+description: "The group of all permutations of a 3-element set, with elements represented in standard cycle notation."
+demo_instances:
+  - n: 3
+    op_symbol: "∘"
+
+set:
+  definition: "The set of all 6 permutations of '0, 1, 2' in cycle notation."
+  elements:
+    generator: "permutation_elements"
+    params: { n: "{n}" }
+  validator:
+    type: "finite_set_validator"
+    params:
+      elements:
+        generator: "permutation_elements"
+        params: { n: "{n}" }
+  sampler:
+    type: "finite_set_sampler"
+    params:
+      elements:
+        generator: "permutation_elements"
+        params: { n: "{n}" }
+
+signature:
+  - name: "Compose Permutations"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "table_lookup_2d"
+      params:
+        elements: { generator: "permutation_elements", params: { n: "{n}" } }
+        table: { generator: "permutation_composition_table", params: { n: "{n}" } }
+  - name: "Inverse"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "table_lookup_1d"
+      params:
+        elements: { generator: "permutation_elements", params: { n: "{n}" } }
+        table:
+          generator: "group_inverse_table"
+          params:
+            identity_index: 0 # The identity permutation '()' is at index 0
+            table: { generator: "permutation_composition_table", params: { n: "{n}" } }
+  - name: "Identity"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "()" } }
+
+rules_template: >
+  This system is the group of symmetries of an equilateral triangle, S₃. The operation is function composition, read from right to left.
+
+  - **Core Operation (∘)**: `p₁ ∘ p₂` means applying permutation `p₂` first, then applying `p₁` to the result.
+    - **Example**: `(0 1) ∘ (0 2)`
+      1. First, apply `(0 2)` to the set "0, 1, 2". This swaps 0 and 2, resulting in "2, 1, 0".
+      2. Next, apply `(0 1)` to that result. This swaps 0 and 1. The result "2, 1, 0" becomes "2, 0, 1".
+      3. What single permutation maps "0, 1, 2" to "2, 0, 1"? It's the cycle `(0 2 1)`.
+      4. Therefore, `(0 1) ∘ (0 2) = (0 2 1)`.
+
+  - **Solving Equations**: This group is non-commutative. `(0 1) ∘ (0 2)` is not the same as `(0 2) ∘ (0 1)`.
+    - To solve `A ∘ x = B`, you must calculate `x = inv(A) ∘ B`.

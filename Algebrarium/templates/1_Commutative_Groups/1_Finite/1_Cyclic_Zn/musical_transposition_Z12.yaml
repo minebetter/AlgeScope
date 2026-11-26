@@ -1,0 +1,69 @@
+# Meta-Template: Musical Transposition System (Z₁₂)
+name: "12-Tone Equal Temperament Transposition System"
+description: "A system where elements are musical transposition operations (raise by N semitones). The operation is the composition of transpositions, modulo 12 (one octave)."
+demo_instances:
+  - n: 12
+    op_symbol: "->"
+
+set:
+  definition: "All transposition operations 'UP_k', where k is the number of semitones from 0 (unison) to 11 (major seventh)."
+  
+  validator:  
+    type: "finite_set_validator"
+    params: 
+      elements: 
+        generator: generate_shifts
+        params:
+          n: "{n}"
+          prefix: "UP"
+  sampler:
+    type: "finite_set_sampler"
+    params:
+      elements:
+        generator: generate_shifts
+        params:
+          n: "{n}"
+          prefix: "UP"
+
+signature:
+  - name: "Compose Transpositions"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "fsm_transition_compose_logic"
+      params:
+        num_states: "{n}"
+      
+  - name: "Inverse Transposition"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "fsm_transition_inverse_logic"
+      params:
+        num_states: "{n}"
+      
+  - name: "Identity (Unison)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "UP_0" } }
+
+rules_template: >
+  This system is a cornerstone of Western music theory, modeling the combination of musical intervals.
+
+  - **Elements**: `UP_k` represents transposing a note up by k semitones.
+    - `UP_0`: Unison (Identity)
+    - `UP_4`: Major Third
+    - `UP_7`: Perfect Fifth
+    - `UP_11`: Major Seventh
+  - **Core Operation ({op_symbol})**: `T1 {op_symbol} T2` means applying transposition T1, then T2. The result is calculated modulo 12.
+    - **Example (Circle of Fifths)**: `UP_7` (up a perfect fifth) `{op_symbol}` `UP_7` = `UP_14 mod 12` = `UP_2` (up a major second).
+    - **Example (Tritone)**: `UP_6` (augmented fourth) `{op_symbol}` `UP_6` = `UP_12 mod 12` = `UP_0` (back to the starting pitch class).
+
+  - **Inverse (inv)**: `inv(T)` is the transposition that cancels T.
+    - **Example**: The inverse of `UP_7` (up a fifth) is `UP_5` (up a fourth), because `7 + 5 = 12`.
+
+  - **How to solve for an unknown transposition `UP_4 {op_symbol} x = UP_9`**:
+    - **Principle**: `x = inv(UP_4) {op_symbol} UP_9`.
+    - **Solving**: `inv('UP_4')` is `UP_8`. The calculation becomes `x = 'UP_8' {op_symbol} 'UP_9'`, which is `UP_17 mod 12`, resulting in `'UP_5'`.
+    - **Interpretation**: If a melody is transposed up a major third (`UP_4`) and then by an unknown interval `x`, and the total transposition is a major sixth (`UP_9`), then that unknown interval must have been a perfect fourth (`UP_5`).

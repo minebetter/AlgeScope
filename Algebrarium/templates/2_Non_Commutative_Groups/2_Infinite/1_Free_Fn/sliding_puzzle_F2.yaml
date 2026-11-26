@@ -1,0 +1,47 @@
+# Meta-Template: Sliding Puzzle Move System
+name: "Sliding Puzzle Move System"
+description: "A system where elements are sequences of move commands for the empty space in a 3x3 sliding puzzle. Adjacent reverse moves cancel each other out."
+demo_instances:
+  - op_symbol: ">>"
+
+set:
+  definition: "Move sequences composed of 'U'(Up), 'D'(Down), 'L'(Left), 'R'(Right), like 'RDL'. All sequences are in their shortest, reduced form."
+  validator: { type: "regex", params: { pattern: "^[UDLR]*$" } }
+  sampler: { type: "free_group_sampler", params: { alphabet: "UDLR", min_len: 0, max_len: 8, inverses: { "U": "D", "L": "R" } } }
+
+signature:
+  - name: "Concatenate Moves"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "free_group_compose_logic"
+      params:
+        inverses: { "U": "D", "L": "R" }
+  - name: "Reverse Path"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "free_group_inverse_logic"
+      params:
+        inverses: { "U": "D", "L": "R" }
+  - name: "Identity (Stay)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system provides a mathematical basis for combining paths and transformations where the order of operations matters.
+
+  - **Core Operation ({op_symbol})**: `S1 {op_symbol} S2` concatenates two move sequences and fully simplifies the result.
+    - **Example (Concatenation)**: `'RU' {op_symbol} 'DR'` results in `'RUDR'`.
+    - **Example (Simplification)**: `'RD' {op_symbol} 'UL'` combines to `'RDUL'`. The middle `DU` cancels, leaving `'RL'`. Then `RL` cancels, leaving `''` (back to the start).
+
+  - **Inverse (inv)**: `inv(S)` is a path that exactly retraces the steps of S to return to the starting point.
+    - **Example**: `inv('RDL')` is `'RUL'`.
+
+  - **How to solve for an unknown sequence `'RU' {op_symbol} x = 'RDR'`**:
+    - **Principle**: `x = inv('RU') {op_symbol} 'RDR'`.
+    - **Solving**: `inv('RU')` is `'DR'`. The calculation is `'DR' {op_symbol} 'RDR'`. The `RR` in the middle are not inverses. Let's re-read the logic.
+    - `DR` + `RDR` -> `DRRDR`. No simplification is possible. This example might be flawed.
+    - Let's take `solve 'RU' {op_symbol} x = 'R'`. `x = inv('RU') {op_symbol} 'R'` -> `'DR' {op_symbol} 'R'` -> `'D'`.

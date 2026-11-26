@@ -1,0 +1,53 @@
+# Meta-Template: Finite State Machine Transition System
+name: "4-State Cyclic FSM Transition System"
+description: "A system where the elements are the state transition functions of a 4-state cyclic FSM (S0->S1->S2->S3->S0). The operation is the composition of these functions."
+demo_instances:
+  - op_symbol: ">>" # No parameters needed as the set is fixed
+
+set:
+  definition: "The set of named functions describing a transition from any state to another, e.g., 'Shift_1', 'Shift_2'."
+
+
+  validator: 
+    type: "finite_set_validator"
+    params: 
+      elements:
+        generator: generate_shifts
+        params:
+          n: 4
+
+  sampler: 
+    type: "finite_set_sampler"
+    params: 
+      elements:
+        generator: generate_shifts
+        params:
+            n: 4
+
+signature:
+  - name: "Compose"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "fsm_transition_compose_logic", params: { num_states: 4 } }
+  - name: "Inverse"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "fsm_transition_inverse_logic", params: { num_states: 4 } }
+  - name: "Identity"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "Shift_0" } }
+
+rules_template: >
+  This system models the effect of performing consecutive state transitions in a cyclic state machine.
+
+  - **Core Operation ({op_symbol})**: `T1 {op_symbol} T2` represents applying transition T1, followed by applying transition T2.
+    - Example: `Shift_1 {op_symbol} Shift_2` means shifting forward by 1, then by 2, for a total shift of 3. This is equivalent to the single transition `Shift_3`.
+
+  - **Inverse (inv)**: `inv(T)` is the transition that "undoes" the effect of T.
+    - Example: `inv('Shift_1')` (undo a 1-step shift) is equivalent to shifting forward by 3 steps, which is `Shift_3`.
+
+  - **How to solve the equation `T_known {op_symbol} T_unknown = T_final`**:
+    - **Principle**: `T_unknown = inv(T_known) {op_symbol} T_final`.
+    - **Solving**: If a system undergoes a known transition `T_known` followed by an unknown transition `T_unknown`, resulting in a net final effect of `T_final`, you can precisely calculate the unknown transition.

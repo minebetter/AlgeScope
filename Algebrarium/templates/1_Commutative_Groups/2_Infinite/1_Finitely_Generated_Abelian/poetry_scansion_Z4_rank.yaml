@@ -1,0 +1,51 @@
+# Meta-Template: Poetry Scansion Adjustment System
+name: "Poetry Scansion Adjustment System"
+description: "A system where elements are adjustments to the syllable count (e.g., stressed/unstressed) of a line of poetry to meet metrical requirements."
+demo_instances:
+  - op_symbol: ปรับ
+
+set:
+  definition: "Strings describing syllable changes, like 'stressed:1,unstressed:-1' for adding one stressed and removing one unstressed syllable."
+ 
+  validator:
+    type: "key_value_string_validator"
+    params:
+      allowed_keys: ["stressed", "unstressed", "long", "short"]
+      val_type: "int"
+  sampler:
+    type: "key_value_sampler"
+    params:
+      keys: ["stressed", "unstressed", "long", "short"]
+      min_val: -2 # A poet might remove up to 2 syllables
+      max_val: 2  # Or add up to 2
+      min_keys: 1
+      max_keys: 2
+      val_is_int: True
+
+signature:
+  - name: "Combine Adjustments"
+    symbol: "{op_symbol}" # Thai for 'adjust'
+    arity: 2
+    precedence: 1
+    logic: { type: "key_value_additive_merge_logic", params: { val_type: 'int' } }
+  - name: "Reverse Adjustment"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "key_value_additive_inverse_logic", params: { val_type: 'int' } }
+  - name: "Identity (No Change)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models the process of a poet adjusting phrasing to fit a specific meter.
+
+  - **Core Operation ({op_symbol})**: `T1 {op_symbol} T2` combines the effects of two syllable adjustments.
+    - Example: `'stressed:1' {op_symbol} 'unstressed:1'` results in `'stressed:1,unstressed:1'`.
+    - Example: `'stressed:1' {op_symbol} 'stressed:-1,long:1'` results in `'long:1'` (the adjustments to stressed syllables cancel each other out).
+
+  - **Inverse (inv)**: `inv('stressed:1')` is `'stressed:-1'`, representing an adjustment that cancels the first.
+
+  - **How to solve for an unknown adjustment `T_known {op_symbol} x = T_final`**:
+    - **Principle**: `x = inv(T_known) {op_symbol} T_final`.
+    - **Solving**: If a poem undergoes a known modification `T_known` but the result does not fit the meter, and you know the target net change `T_final`, you can calculate the exact further adjustment `x` that is needed.

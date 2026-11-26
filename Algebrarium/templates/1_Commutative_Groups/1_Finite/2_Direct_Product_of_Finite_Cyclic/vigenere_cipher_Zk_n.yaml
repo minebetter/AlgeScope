@@ -1,0 +1,42 @@
+# Meta-Template: Vigenère Cipher System
+name: "Vigenère Cipher System (length {n})"
+description: "An algebraic system based on the Vigenère cipher. The elements are strings of a fixed length {n}, and the core operation is character-wise modular addition over an alphabet."
+demo_instances:
+  - n: 5
+    alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    op_symbol: "+"
+
+  - n: 5
+    alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    op_symbol: "$"
+
+  - n: 12
+    alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    op_symbol: "&"
+
+set:
+  definition: "All strings of fixed length {n} composed of characters from the alphabet '{alphabet}'."
+  validator: { type: "regex", params: { pattern: "^[{alphabet}]{{{n}}}$" } }
+  sampler: { type: "random_string", params: { alphabet: "{alphabet}", min_len: "{n}", max_len: "{n}" } }
+
+signature:
+  - name: "Combine"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "charwise_modular_add_logic", params: { alphabet: "{alphabet}" } }
+  - name: "Inverse"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "charwise_modular_inverse_logic", params: { alphabet: "{alphabet}" } }
+  
+rules_template: >
+  This system models the composition of Vigenère ciphers.
+
+  - **Core Operation ({op_symbol})**: `A {op_symbol} B` works by adding the character values at each corresponding position (modulo the alphabet size).
+    This is equivalent to encrypting string A with string B as the key.
+    - Example (with A-Z alphabet): 'CAT' {op_symbol} 'KEY' results in 'MEF'.
+
+  - **How to solve the equation `A {op_symbol} x = B`**:
+    - **Principle**: The unknown `x` can be found using the inverse operation: `x = inv(A) {op_symbol} B`.
+    - **Solving**: To find `x` in the equation `'CAT' {op_symbol} x = 'MEF'`, you would calculate `inv('CAT') {op_symbol} 'MEF'`, which gives the result `'KEY'`.

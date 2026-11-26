@@ -1,0 +1,42 @@
+# Meta-Template: 2D Grid Robot Path System
+name: "2D Grid Robot Path System"
+description: "A system where elements are sequences of movement commands for a robot on a 2D grid. The operation concatenates and simplifies paths."
+demo_instances:
+  - op_symbol: ">>"
+
+set:
+  definition: "All sequences of commands composed of 'F' (Forward), 'B' (Backward), 'L' (Turn Left 90°), and 'R' (Turn Right 90°)."
+  validator: { type: "regex", params: { pattern: "^[FBLR]*$" } }
+  sampler: { type: "free_group_sampler", params: { alphabet: "FBLR", min_len: 1, max_len: 8,inverses: {"F":"B", "L":"R"}  } }
+
+signature:
+  - name: "Concatenate Paths"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    # This logic only cancels direct inverses, e.g., "FB" -> "" and "LR" -> "".
+    # More complex simplifications like "LFLF" -> "B" are not handled, making it a free group.
+    logic: { type: "free_group_compose_logic", params: { inverses: {"F":"B", "L":"R"} } }
+  - name: "Return Path"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "free_group_inverse_logic", params: { inverses: {"F":"B", "L":"R"} } }
+  - name: "Identity (Stay)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models the planning of robot movements, where the order of actions is crucial.
+
+  - **Core Operation ({op_symbol})**: `Path1 {op_symbol} Path2` concatenates two paths and simplifies them by removing redundant back-and-forth movements.
+    - Example: `'FR' {op_symbol} 'LB'` results in the unsimplified path `'FRLB'`.
+    - Example (Simplification): `'FR' {op_symbol} 'RB'` first combines to `'FRRB'`.
+      - `R` and its inverse `L` are not adjacent. Let's correct the example.
+      - `'FR' {op_symbol} 'LB'` -> `'FRLB'`. Simplification `RL` cancels, giving `'FB'`. `FB` cancels, giving `''`. (Back to start).
+      - Correct Example from template: `'FR' {op_symbol} 'RB'`. `inv('R')` is `L`, not `R`. This example seems off.
+      - Let's use a clear example: `'FL' {op_symbol} 'RB'` -> `'FLRB'`. The pair `LR` cancels, leaving `'FB'`. `FB` cancels, leaving `''`.
+
+  - **How to solve for an unknown path `Path_Known {op_symbol} x = Path_Final`**:
+    - **Principle**: The unknown path `x` is found by calculating `x = inv(Path_Known) {op_symbol} Path_Final`.
+    - **Solving**: To find the path `x` needed to get from the end of `Path_Known` to the end of `Path_Final`, you can calculate `inv('FR') {op_symbol} 'F'`. This becomes `'LB' {op_symbol} 'F'`, resulting in `'LBF'`.

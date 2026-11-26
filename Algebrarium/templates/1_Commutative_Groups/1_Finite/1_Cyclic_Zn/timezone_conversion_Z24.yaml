@@ -1,0 +1,50 @@
+# Meta-Template: Timezone Cyclic System
+name: "Timezone Offset System (Z₂₄)"
+description: "A system where elements are timezone offsets. The operation is addition modulo 24, modeling the cyclic nature of a 24-hour day."
+demo_instances:
+  - op_symbol: "⊎"
+
+set:
+  definition: "Timezone offset strings like 'UTC+8', ranging from UTC-11 to UTC+12."
+  validator:
+    type: "regex"
+    params:
+      # This regex matches: +12, +11, +10, +0-9, -0-9, -10, -11
+      pattern: "^UTC(\\+1[0-2]|\\+[0-9]|-1[01]|-[0-9])$"
+  sampler:
+    type: "timezone_sampler"
+    params:
+      min_offset: -11
+      max_offset: 12
+
+signature:
+  - name: "Combine Offsets (mod 24)"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "timezone_offset_compose_logic" }
+  - name: "Inverse Offset"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "timezone_offset_inverse_logic" }
+  - name: "Identity (UTC)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "UTC+0" } }
+
+rules_template: >
+  This system perfectly models clock arithmetic.
+
+  - **Core Operation ({op_symbol})**: `Offset1 {op_symbol} Offset2` adds two timezone offsets, "wrapping around" the 24-hour clock.
+    - **Example**: `'UTC+10' {op_symbol} 'UTC+5'` (10 + 5 = 15). 15:00 is equivalent to -9:00 in the [-11, +12] range, so the result is `'UTC-9'`.
+    - **Example**: `'UTC-10' {op_symbol} 'UTC-10'` (-10 + -10 = -20). -20:00 is equivalent to +4:00, so the result is `'UTC+4'`.
+
+  - **Inverse (inv)**: `inv(Offset)` is the operation that cancels out the original offset.
+    - **Example**: `inv('UTC-11')` is `UTC+11`, because `-11 + 11 = 0`.
+    - **Example**: `inv('UTC+12')` is `UTC-12`, but `-12` is represented as `UTC+12` in this system. Let's check: `12 + 12 = 24`, which is `0` mod 24. Correct. So `UTC+12` is its own inverse.
+
+  - **How to solve the equation `Known_Offset {op_symbol} x = Final_Offset`**:
+    - **Principle**: `x = inv(Known_Offset) {op_symbol} Final_Offset`.
+    - **Solving**: To solve `'UTC+10' {op_symbol} x = 'UTC-9'`, we calculate `x = inv('UTC+10') {op_symbol} 'UTC-9'`.
+    - **Calculation**: This becomes `'UTC-10' {op_symbol} 'UTC-9'`, which results in `'UTC+5'`.
+    - **Verification**: `'UTC+10' {op_symbol} 'UTC+5'` indeed results in `'UTC-9'`.

@@ -1,0 +1,63 @@
+# Meta-Template: Affine Cipher System
+name: "Affine Cipher System (modulo {m})"
+description: "A system where elements are invertible linear transformations of the form y=(ax+b) mod {m}. The operation is function composition."
+demo_instances:
+  - m: 26 # For the English alphabet
+    op_symbol: "&"
+  - m: 29 # For a prime modulus
+    op_symbol: "#"
+
+set:
+  definition: "All pairs '(a,b)' where 'a' is coprime to {m}, and 0 <= a,b < {m}."
+  validator:
+    type: "affine_param_validator"
+    params:
+      m: "{m}"
+  sampler:
+    type: "affine_param_sampler"
+    params:
+      m: "{m}"
+
+signature:
+  - name: "Compose Ciphers"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "affine_compose_logic"
+      params:
+        m: "{m}"
+  - name: "Inverse Cipher"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "affine_inverse_logic"
+      params:
+        m: "{m}"
+  - name: "Identity (No Change)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "(1,0)" } } # y = 1*x + 0
+
+rules_template: >
+  This system is a classic example in cryptography and an introduction to linear transformation groups. The order of operations matters.
+
+  - **Core Operation ({op_symbol})**: `T1 {op_symbol} T2` means encrypting with transformation T2 *first*, then encrypting the result with T1.
+    - **Non-commutativity**: `(3,1) {op_symbol} (7,4)` is not the same as `(7,4) {op_symbol} (3,1)`.
+      - `(3,1) {op_symbol} (7,4)` -> `a=(3*7)%26=21`, `b=(3*4+1)%26=13` -> `(21,13)`
+      - `(7,4) {op_symbol} (3,1)` -> `a=(7*3)%26=21`, `b=(7*1+4)%26=11` -> `(21,11)`
+      - The results are different, so the system is non-commutative.
+
+  - **Inverse (inv)**: `inv(T)` is the transformation that decrypts a message encrypted by T.
+    - **Example (m=26)**: To find `inv((3,5))`:
+    - **Calculation**: First, find the modular inverse of 3 (mod 26), which is 9 (since 3*9 = 27 ≡ 1 mod 26). Then, the new 'b' is `(-9 * 5) mod 26 = -45 mod 26 = 7`.
+    - **Result**: `(9,7)`
+
+  - **How to solve for an unknown transformation `T1 {op_symbol} x = T2`**:
+    - **Principle**: `x = inv(T1) {op_symbol} T2`.
+    - **Solving for x in `(3,1) {op_symbol} x = (21,11)`**:
+    - **Calculation**: First, `inv((3,1))` is `(9, -9*1 mod 26) = (9,17)`.
+      Then, compose `(9,17) {op_symbol} (21,11)`:
+      - `a = (9 * 21) mod 26 = 189 mod 26 = 7`.
+      - `b = (9 * 11 + 17) mod 26 = (99 + 17) mod 26 = 116 mod 26 = 12`.
+    - **Result**: `x = (7,12)`.

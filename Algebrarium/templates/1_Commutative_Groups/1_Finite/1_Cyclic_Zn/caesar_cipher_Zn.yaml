@@ -1,0 +1,54 @@
+# Meta-Template: Caesar Cipher System
+name: "Caesar Cipher System (alphabet size {n})"
+description: "An algebraic system based on the Caesar cipher. The elements are the integer 'shift' amounts, and the operation is the composition of these shifts."
+demo_instances:
+  - n: 26 # For the standard English alphabet
+  - n: 16 # For hexadecimal characters
+  - n: 10 # For digits
+
+set:
+  definition: "All strings formatted as 'Shift_k', where k is an integer from 0 to {n}-1, representing the shift amount."
+  elements: 
+    generator: generate_shifts
+    params:
+      n: "{n}"
+  validator:  
+    type: "finite_set_validator"
+    params: 
+      elements: 
+        generator: generate_shifts
+        params:
+          n: "{n}"
+  sampler:
+    type: "finite_set_sampler"
+    params:
+      elements:
+        generator: generate_shifts
+        params:
+          n: "{n}"
+
+signature:
+  - name: "Compose Shifts"
+    symbol: "->"
+    arity: 2
+    precedence: 1
+    logic: { type: "fsm_transition_compose_logic", params: { num_states: "{n}" } }
+  - name: "Inverse Shift"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "fsm_transition_inverse_logic", params: { num_states: "{n}" } }
+  - name: "Identity (No Shift)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "Shift_0" } }
+
+rules_template: >
+  This system models the mathematical structure of the Caesar cipher.
+
+  - **Core Operation (->)**: `Shift_A -> Shift_B` represents the net effect of applying a shift of A, followed by a shift of B. The total shift is calculated modulo {n}.
+    - Example (n=26): `Shift_3 -> Shift_5` is equivalent to `Shift_8`.
+    - Example (n=26): `Shift_25 -> Shift_3` is equivalent to `Shift_2` (since (25+3) mod 26 = 2).
+
+  - **How to solve the equation `Shift_A -> x = Shift_B`**:
+    - **Principle**: `x = inv(Shift_A) -> Shift_B`.
+    - **Solving**: To find the unknown shift `x` that takes you from a known shift `A` to a final total shift `B`, you apply the inverse of `A` to `B`.

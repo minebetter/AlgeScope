@@ -1,0 +1,56 @@
+# Meta-Template: Binary Tree Rotation System
+name: "Binary Tree Rotation System"
+description: "A system where elements are sequences of 'Left' (L) and 'Right' (R) rotation operations on a specific node in a binary search tree."
+demo_instances:
+  - op_symbol: "->"
+
+set:
+  definition: "A semicolon-separated sequence of 'L' and 'R' operations, like 'L;R;R'. All adjacent 'L;R' and 'R;L' pairs have been cancelled out."
+  allowed_tokens: ["L", "R", "inv(L)", "inv(R)"] # For a more robust validator, though the current one works
+  inverse_map: { "L": "R" }
+  validator: { type: "semicolon_list_validator", params: { allowed_tokens: ["L", "R"] } } # Validates 'L' and 'R'
+  sampler:
+    type: "token_sequence_sampler"
+    params:
+      tokens: ["L", "R"]
+      min_len: 0
+      max_len: 5
+      separator: ";"
+
+signature:
+  - name: "Compose Rotations"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "token_free_group_compose_logic"
+      params:
+        separator: ";"
+        inverse_map: { "L": "R" } # The inverse of a Left-rotation is a Right-rotation
+  - name: "Reverse Rotations"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "token_free_group_inverse_logic"
+      params:
+        separator: ";"
+        inverse_map: { "L": "R" }
+  - name: "Identity (No Rotation)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models how sequences of tree rotations combine. The order of rotations is critical.
+
+  - **Core Operation ({op_symbol})**: `S1 {op_symbol} S2` means performing the rotation sequence S1, followed by S2, and simplifying any redundant operations.
+    - **Example**: `'L;R;L' {op_symbol} 'R;L'` combines to `'L;R;L;R;L'`. The middle `L;R` cancels, leaving `'L;R;L'`. The new middle `R;L` also cancels, leaving just `'L'`.
+    - **Simplification**: Adjacent `L;R` or `R;L` pairs are removed. `'L;L;R'` simplifies to `'L'`.
+
+  - **Inverse (inv)**: `inv(Seq)` is the sequence of rotations that restores the tree to its original shape.
+    - **Example**: `inv('L;L;R')` is `'L;R;R'` (the sequence is reversed, and L/R are swapped).
+
+  - **How to solve for an unknown rotation sequence `Rot1 {op_symbol} x = RotFinal`**:
+    - **Principle**: `x = inv(Rot1) {op_symbol} RotFinal`.
+    - **Solving**: To solve `'L' {op_symbol} x = 'L;R'`, we calculate `x = inv('L') {op_symbol} 'L;R'`.
+    - **Calculation**: This becomes `'R' {op_symbol} 'L;R'`, which simplifies to just `'R'`.

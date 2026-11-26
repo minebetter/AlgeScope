@@ -1,0 +1,47 @@
+# Meta-Template: Array Cyclic Shift System
+name: "Cyclic Shift System for an Array of size {n}"
+description: "A system where the elements are cyclic left-shift operations on an array of size {n}."
+demo_instances:
+  - n: 8
+  - n: 12
+
+set:
+  definition: "All operations formatted as 'LShift_k', where k is from 0 to {n}-1."
+  validator: 
+    type: "finite_set_validator"
+    params: 
+      elements:
+        generator: "generate_shifts"
+        params: 
+          n: "{n}"
+          prefix: "LShift"
+
+  sampler:
+    type: "finite_set_sampler"
+    params:
+      elements:
+        generator: "generate_shifts"
+        params: 
+          n: "{n}"
+          prefix: "LShift"
+
+signature:
+  - name: "Compose Shifts"
+    symbol: ">>"
+    arity: 2
+    precedence: 1
+    logic: { type: "fsm_transition_compose_logic", params: { num_states: "{n}" } } # Assuming logic can handle a prefix
+  - name: "Inverse Shift (Right Shift)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "fsm_transition_inverse_logic", params: { num_states: "{n}" } }
+
+rules_template: >
+  This system models how consecutive cyclic shift operations on an array combine.
+
+  - **Core Operation (>>)**: `LShift_a >> LShift_b` represents the net effect of performing a left shift of 'a' positions, followed by a left shift of 'b' positions. The total shift is `(a + b)` modulo {n}.
+    - Example (for an array of size 8): `LShift_3 >> LShift_7` results in a total shift of 10 positions, which is equivalent to `LShift_2` (since (3+7) mod 8 = 2).
+
+  - **How to solve for an unknown shift `LShift_3 >> x = LShift_1` (with n=8)**:
+    - **Principle**: The unknown shift `x` can be found by calculating `inv(LShift_3) >> LShift_1`.
+    - **Solving**: The inverse of shifting left by 3 is shifting right by 3, which is the same as shifting left by 5 (`LShift_5`). Therefore, the calculation is `LShift_5 >> LShift_1`, which results in `LShift_6`.

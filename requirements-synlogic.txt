@@ -1,0 +1,7 @@
+-r requirements.txt
+nltk
+inflect
+sympy
+math-verify
+pandas
+tqdm

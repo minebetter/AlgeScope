@@ -1,0 +1,42 @@
+# Meta-Template: CSS Class Toggle System
+name: "CSS Class Toggle System"
+description: "A system where an element represents a set of CSS classes to be toggled on an HTML element."
+demo_instances:
+  - {}
+
+set:
+  definition: "A comma-separated subset of class names to be toggled, e.g., 'active,dark-mode'."
+  
+  validator: { type: "regex", params: { pattern: "^([a-zA-Z-]+,)*[a-zA-Z-]+$|^$" } } # Basic validation
+  sampler:
+    type: "subset_sampler"
+    params:
+      elements: ["active", "hidden", "dark-mode", "disabled", "focus"]
+      min_subset_size: 0
+      max_subset_size: 3
+      separator: ","
+      
+signature:
+  - name: "Combine Toggles"
+    symbol: "toggleClass"
+    arity: 2
+    precedence: 1
+    logic: { type: "set_symmetric_difference_logic", params: { separator: "," } }
+  - name: "Inverse (Self)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+  - name: "Identity (No Toggle)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models the behavior of toggling CSS classes, where applying the same toggle twice cancels the effect.
+
+  - **Core Operation (toggleClass)**: The result of `A toggleClass B` is the symmetric difference of the two sets of class names. It represents the net classes that would be toggled.
+    - Example: `'active,hidden' toggleClass 'hidden,dark-mode'` results in `'active,dark-mode'`, because the common class 'hidden' is toggled twice (no net change) while 'active' and 'dark-mode' are toggled once.
+
+  - **How to solve for an unknown toggle `x` in `'active' toggleClass x = 'active,dark-mode'`**:
+    - **Principle**: `x = 'active' toggleClass 'active,dark-mode'`.
+    - **Solving**: The calculation yields `'dark-mode'`, which is the precise set of classes that needs to be toggled to achieve the final state from the initial state.

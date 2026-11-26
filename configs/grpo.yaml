@@ -1,0 +1,64 @@
+# Portable scientific settings, derived from the ReasonBench GRPO experiments.
+# Model/data/output paths and hardware placement are supplied on the command line.
+algorithm.adv_estimator: grpo
+algorithm.norm_adv_by_std_in_grpo: false
+algorithm.use_kl_in_reward: false
+data.train_batch_size: 128
+data.val_batch_size: 128
+data.max_prompt_length: 8192
+data.max_response_length: 8192
+data.filter_overlong_prompts: false
+data.truncation: error
+data.return_raw_chat: true
+data.shuffle: true
++data.seed: 1234
+actor_rollout_ref.model.enable_gradient_checkpointing: true
+actor_rollout_ref.model.use_remove_padding: true
+actor_rollout_ref.actor.strategy: fsdp
+actor_rollout_ref.actor.ppo_mini_batch_size: 8
+actor_rollout_ref.actor.ppo_epochs: 1
+actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu: 1
+actor_rollout_ref.actor.use_dynamic_bsz: true
+actor_rollout_ref.actor.ppo_max_token_len_per_gpu: 16384
+actor_rollout_ref.actor.optim.lr: 1.0e-6
++actor_rollout_ref.actor.optim.betas: [0.9, 0.999]
+actor_rollout_ref.actor.optim.weight_decay: 0.01
+actor_rollout_ref.actor.optim.lr_warmup_steps: 0
+actor_rollout_ref.actor.optim.warmup_style: constant
+actor_rollout_ref.actor.grad_clip: 1.0
+actor_rollout_ref.actor.clip_ratio: 0.2
+actor_rollout_ref.actor.clip_ratio_low: 0.2
+actor_rollout_ref.actor.clip_ratio_high: 0.2
+actor_rollout_ref.actor.policy_loss.loss_mode: vanilla
+actor_rollout_ref.actor.loss_agg_mode: token-mean
+actor_rollout_ref.actor.use_kl_loss: false
+actor_rollout_ref.actor.entropy_coeff: 0
+actor_rollout_ref.actor.checkpoint.save_contents: [model, optimizer, extra]
+actor_rollout_ref.rollout.name: vllm
+actor_rollout_ref.rollout.mode: sync
+actor_rollout_ref.rollout.n: 8
+actor_rollout_ref.rollout.temperature: 1.0
+actor_rollout_ref.rollout.top_p: 1.0
+actor_rollout_ref.rollout.top_k: -1
+actor_rollout_ref.rollout.tensor_model_parallel_size: 4
+actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu: 1
+actor_rollout_ref.rollout.gpu_memory_utilization: 0.6
+actor_rollout_ref.rollout.max_model_len: 16384
+actor_rollout_ref.rollout.max_num_batched_tokens: 16384
+actor_rollout_ref.rollout.max_num_seqs: 128
+actor_rollout_ref.rollout.enforce_eager: true
+actor_rollout_ref.rollout.val_kwargs.n: 1
+actor_rollout_ref.rollout.val_kwargs.do_sample: false
+actor_rollout_ref.rollout.val_kwargs.temperature: 0.0
+actor_rollout_ref.rollout.val_kwargs.top_p: 1.0
+actor_rollout_ref.rollout.val_kwargs.top_k: -1
+actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu: 1
+reward_model.reward_manager: naive
+trainer.total_training_steps: 200
+trainer.total_epochs: 15
+trainer.val_before_train: true
+trainer.test_freq: 20
+trainer.save_freq: 100
+trainer.resume_mode: disable
+trainer.logger: [console, tensorboard]
+trainer.project_name: algescope

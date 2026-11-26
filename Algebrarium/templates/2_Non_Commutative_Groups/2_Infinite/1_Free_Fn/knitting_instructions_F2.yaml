@@ -1,0 +1,40 @@
+# Meta-Template: Knitting Instruction Sequence System
+name: "Knitting Instruction Sequence System"
+description: "A system where elements are sequences of knitting instructions (e.g., 'knit, purl'). The operation concatenates sequences and cancels out adjacent inverse operations."
+demo_instances:
+  - op_symbol: ">>"
+    min_len: 1
+    max_len: 6
+
+set:
+  definition: "All sequences of instructions composed of 'k' (knit), 'p' (purl), 'K' (un-knit), and 'P' (un-purl)."
+  validator: { type: "regex", params: { pattern: "^[kpKP]*$" } }
+  
+  sampler: { type: "free_group_sampler", params: { alphabet: "kpKP", min_len: 0, max_len: 8, inverses: {"k":"K", "p":"P"}  } }
+
+signature:
+  - name: "Concatenate"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "free_group_compose_logic", params: { inverses: {"k":"K", "p":"P"} } }
+  - name: "Reverse Sequence"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "free_group_inverse_logic", params: { inverses: {"k":"K", "p":"P"} } }
+  - name: "Identity (No-op)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models how sequences of reversible knitting actions combine. The order of operations is critical.
+
+  - **Core Operation ({op_symbol})**: `Seq1 {op_symbol} Seq2` joins two instruction sequences and simplifies the result by removing any action immediately followed by its reversal.
+    - Example: The sequence `'kp'` followed by `'PK'` is first combined to `'kpPK'`.
+    - `p` (purl) and `P` (un-purl) are a reversing pair, so they cancel: `'kpPK'` simplifies to `'kK'`.
+    - `k` (knit) and `K` (un-knit) also cancel, so `'kK'` simplifies to `''` (the empty sequence, representing no net action).
+
+  - **How to solve for an unknown sequence `Seq_Known {op_symbol} x = Seq_Final`**:
+    - **Principle**: The unknown sequence `x` can be found by calculating `inv(Seq_Known) {op_symbol} Seq_Final`.
+    - **Solving**: This allows you to determine what sequence of actions `x` is needed to get from the result of `Seq_Known` to the result of `Seq_Final`.

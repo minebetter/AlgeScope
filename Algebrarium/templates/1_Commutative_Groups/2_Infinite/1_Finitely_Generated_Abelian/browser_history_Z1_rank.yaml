@@ -1,0 +1,44 @@
+# Meta-Template: Browser History Navigation System
+name: "Browser History Navigation System (Z)"
+description: "A system where an element represents a net navigation in a browser's history (e.g., 'go back 2 steps')."
+demo_instances:
+  - {}
+
+set:
+  definition: "A string like 'BACK(n)' or 'FWD(n)', representing a net navigational displacement."
+  validator: { type: "history_nav_validator" }
+  sampler:
+    type: "history_nav_sampler"
+    params:
+      max_steps: 10
+
+signature:
+  - name: "Combine Navigations"
+    symbol: "+"
+    arity: 2
+    precedence: 1
+    logic: { type: "history_nav_compose_logic" }
+  - name: "Reverse Navigation"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "history_nav_inverse_logic" }
+  - name: "Identity (Stay)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } } # Empty string represents FWD(0) or BACK(0)
+
+rules_template: >
+  This system models the net effect of moving back and forth in a history list.
+
+  - **Core Operation (+)**: `Nav1 + Nav2` adds the net displacements of two navigations.
+    - **Example**: `'BACK(3)' + 'FWD(1)'` results in a net displacement of -3 + 1 = -2, which is `'BACK(2)'`.
+    - **Example**: `'FWD(5)' + 'FWD(2)'` results in a net displacement of +5 + 2 = +7, which is `'FWD(7)'`.
+
+  - **Inverse (inv)**: `inv(Nav)` is the operation that takes you back to the position you were at before the navigation.
+    - **Example**: `inv('BACK(5)')` is `'FWD(5)'`.
+
+  - **How to solve for an unknown navigation `Nav1 + x = Nav2`**:
+    - **Principle**: `x = inv(Nav1) + Nav2`.
+    - **Solving**: You first perform `Nav1` = 'FWD(3)', but you want the final net effect to be `Nav2` = 'BACK(2)'.
+    - **Calculation**: `x = inv('FWD(3)') + 'BACK(2)'` becomes `'BACK(3)' + 'BACK(2)'`, resulting in `'BACK(5)'`.
+    - **Interpretation**: After moving forward 3 steps, you need to go back 5 steps (`x`) to achieve a final net effect of being 2 steps back from your origin.

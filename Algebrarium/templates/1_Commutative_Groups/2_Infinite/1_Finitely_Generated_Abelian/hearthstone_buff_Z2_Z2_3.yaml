@@ -1,0 +1,91 @@
+# Meta-Template: Minion Buff System
+name: "Minion Stat and Keyword Buff System"
+description: "A system where an element is an operation that changes a minion's stats (Attack/Health) and keywords (Taunt/Divine Shield)."
+demo_instances:
+  - op_symbol: "->"
+
+set:
+  definition: "A string like 'ATK+2;TAUNT_TOGGLE', representing a net 'buff package'."
+  validator: { type: "hearthstone_buff_validator" }
+  sampler: { type: "hearthstone_buff_sampler" }
+
+signature:
+  - name: "Combine Buffs"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "hearthstone_buff_compose_logic" }
+  - name: "Reverse Buff"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "hearthstone_buff_inverse_logic" }
+  - name: "Identity (No Effect)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models how buffs and debuffs on a game character (minion) combine. Each "buff string" represents the *net change* from a sequence of effects. The order in which buffs are applied does not change the final outcome.
+
+  There are two types of effects, and they combine independently:
+
+  ---
+  **1. Numerical Stat Changes (Additive)**
+
+  Stats like Attack (ATK) and Health (HP) are modified by adding or subtracting values.
+
+  - **Combining ATK**:
+    - `ATK+2 -> ATK+3` results in a total of +5 ATK -> `'ATK+5'`
+    - `ATK+4 -> ATK-1` results in a total of +3 ATK -> `'ATK+3'`
+
+  - **Inverse for ATK**: The inverse of adding a value is subtracting it.
+    - `inv('ATK+3')` is `'ATK-3'`.
+    - Combining a buff with its inverse cancels it out: `'ATK+3' -> 'ATK-3'` results in `''` (no change).
+
+  - **HP works exactly the same way.**
+
+  ---
+  **2. Keyword State Changes (Toggles)**
+
+  Keywords like Taunt, Divine Shield, or Poisonous act like on/off switches. Applying the same keyword buff twice is like flipping a light switch twice – it returns to the original state.
+
+  - **Combining TAUNT**:
+    - `TAUNT_TOGGLE -> TAUNT_TOGGLE` cancels out, resulting in `''` (no change to the Taunt status).
+    - `'' -> TAUNT_TOGGLE` results in a net change of toggling Taunt -> `'TAUNT_TOGGLE'`.
+
+  - **Inverse for TAUNT**: A toggle operation is its own inverse.
+    - `inv('TAUNT_TOGGLE')` is `'TAUNT_TOGGLE'`.
+
+  - **DIVINE_SHIELD and other keywords work the same way.**
+
+  ---
+  **3. Combining Mixed Buffs**
+
+  When a buff string contains multiple effects, each component is calculated independently.
+
+  - **Example 1: Simple Combination**
+    - `ATK+2;TAUNT_TOGGLE -> HP+3`
+    - Result: `'ATK+2;HP+3;TAUNT_TOGGLE'` (all effects are collected).
+
+  - **Example 2: Combination with Cancellation**
+    - `ATK+2;HP+5;TAUNT_TOGGLE -> ATK-3;HP-5;DIVINE_SHIELD_TOGGLE`
+    - ATK: `+2 + (-3) = -1`
+    - HP: `+5 + (-5) = 0` (cancels out completely)
+    - TAUNT: Toggled once.
+    - DIVINE_SHIELD: Toggled once.
+    - Result: `'ATK-1;DIVINE_SHIELD_TOGGLE;TAUNT_TOGGLE'`
+
+  ---
+  **How to Solve Equations: Finding the Missing Buff**
+
+  This allows you to determine what buff must have been applied to get from a known state to a final state.
+
+  - **Problem**: A minion is given `Buff1` = 'ATK+2'. After some other effects `x`, its total net buff is `FinalBuff` = 'ATK+5;TAUNT_TOGGLE'. What were the other effects `x`?
+
+  - **Principle**: `x = inv(Buff1) -> FinalBuff`.
+
+  - **Solving**:
+    1. Find the inverse of the known buff: `inv('ATK+2')` is `'ATK-2'`.
+    2. Combine this inverse with the final buff: `'ATK-2' -> 'ATK+5;TAUNT_TOGGLE'`.
+    3. Calculate the result: ATK becomes `(-2) + 5 = +3`, and TAUNT is toggled once.
+    4. **Answer**: The unknown effects were `x = 'ATK+3;TAUNT_TOGGLE'`.

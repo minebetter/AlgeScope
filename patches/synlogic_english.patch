@@ -1,0 +1,120 @@
+--- a/games/tasks/arrow_maze/scripts/arrow_maze.py
++++ b/games/tasks/arrow_maze/scripts/arrow_maze.py
+@@ -96,7 +96,7 @@
+                     continue
+                 
+                 # 生成游戏描述
+-                question = prompt_arrow_maze(maze, n, m, random.choice([True, False]))
++                question = prompt_arrow_maze(maze, n, m, False)
+                 
+                 # 将solution转换为字符串格式作为答案
+                 answer = json.dumps(solution)
+--- a/games/tasks/cryptarithm/scripts/cryptarithm.py
++++ b/games/tasks/cryptarithm/scripts/cryptarithm.py
+@@ -93,7 +93,7 @@
+                 letter_words, digit_map = self._convert_to_letters(numbers)
+                 
+                 # 6. 生成问题描述（随机选择中文或英文）
+-                is_chinese = random.choice([True, False])
++                is_chinese = False
+                 question = self._generate_prompt(letter_words, operators, is_chinese)
+                 
+                 # 7. 构造答案字符串（数字形式的等式）
+--- a/games/tasks/dyck_language/scripts/dyck_language.py
++++ b/games/tasks/dyck_language/scripts/dyck_language.py
+@@ -247,7 +247,7 @@
+                 question_sequence = sequence[:cut_point]
+                 
+                 # 生成问题描述
+-                question = prompt_dyck_language(question_sequence, random.choice([True, False]))
++                question = prompt_dyck_language(question_sequence, False)
+                 
+                 # 创建游戏数据
+                 game_data = Data(
+--- a/games/tasks/dyck_language_errors/scripts/dyck_language_errors.py
++++ b/games/tasks/dyck_language_errors/scripts/dyck_language_errors.py
+@@ -82,7 +82,7 @@
+                 generated_strings.add(bracket_string)
+                 
+                 # 使用提示模板生成问题描述
+-                is_chinese = random.random() < 0.5
++                is_chinese = False
+                 question = prompt_dyck_language_errors(bracket_string, n_types, total_length, is_chinese)
+                 
+                 # 创建游戏数据
+--- a/games/tasks/goods_exchange/scripts/goods_exchange.py
++++ b/games/tasks/goods_exchange/scripts/goods_exchange.py
+@@ -54,7 +54,7 @@
+                 attempts += 1
+                 
+                 # 选择语言（中文/英文）
+-                is_chinese = random.choice([True, False])
++                is_chinese = False
+                 
+                 # 生成人物名称
+                 names = self._generate_names(num_people, is_chinese)
+--- a/games/tasks/operation/scripts/operation.py
++++ b/games/tasks/operation/scripts/operation.py
+@@ -325,7 +325,7 @@
+     def check_number(self,token):
+         try:
+             return float(token)
+-        except:
++        except Exception:
+             return "Not number"
+ 
+     def _simplify_mix_expression(self, expression, symbol_definitions):
+@@ -421,7 +421,7 @@
+     def eval_operation(self,operation):
+         try:
+             return eval(operation)
+-        except:
++        except Exception:
+             return "Can't eval"
+ 
+     def _check_custom_operator(self,operand,operators):
+@@ -433,7 +433,7 @@
+     def check_int(self,operand):
+         try:
+             return int(operand)
+-        except:
++        except Exception:
+             return "Not int"
+     def _process_top_operator(self, operand_stack, operator_stack, symbol_definitions):
+         """
+--- a/games/tasks/space_reasoning_tree/scripts/space_reasoning_tree.py
++++ b/games/tasks/space_reasoning_tree/scripts/space_reasoning_tree.py
+@@ -229,7 +229,10 @@
+         else:
+             # 方式2：提供目标节点爷爷的所有孩子及各自的所有孩子
+             grandfather_children = grandfather.children
+-            descriptions.append(f"{grandfather.item}的孩子是：{', '.join([node.item for node in grandfather_children])}。")
++            if language == "cn":
++                descriptions.append(f"{grandfather.item}的孩子是：{', '.join([node.item for node in grandfather_children])}。")
++            else:
++                descriptions.append(f"{grandfather.item} has {len(grandfather_children)} children: {', '.join([node.item for node in grandfather_children])}.")
+             for uncle in grandfather_children:
+                 children_items = [node.item for node in uncle.children]
+                 
+--- a/games/tasks/sudoku/scripts/sudoku.py
++++ b/games/tasks/sudoku/scripts/sudoku.py
+@@ -55,7 +55,7 @@
+                 masked_sudoku = self._mask_sudoku_by_difficulty(complete_sudoku, difficulty, unique_solution)
+                 
+                 # 生成问题描述（随机选择中文或英文）
+-                is_chinese = random.choice([True, False])
++                is_chinese = False
+                 question = prompt_sudoku(masked_sudoku, is_chinese)
+                 
+                 # 将完整解答转换为字符串形式
+--- a/games/tasks/web_of_lies/scripts/web_of_lies.py
++++ b/games/tasks/web_of_lies/scripts/web_of_lies.py
+@@ -335,7 +335,7 @@
+                 logger.info(f"第 {attempts} 次尝试生成题目")  # 改为 INFO 级别
+                 
+                 # 生成一个游戏实例
+-                use_chinese = random.choice([True, False])
++                use_chinese = False
+                 
+                 tar_people_count = num_person // 2
+                 

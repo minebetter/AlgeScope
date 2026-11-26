@@ -1,0 +1,48 @@
+# Meta-Template: Cron Job Schedule Adjustment System
+
+name: "Cron Job Schedule Adjustment System"
+description: "A system where an element is an offset applied to the execution time fields (minute, hour, day, month, week) of a scheduled task."
+demo_instances:
+  - op_symbol: "then"
+
+set:
+  definition: "A string describing a cron offset, such as 'M+5_H+2', which represents a +5 offset for the minute field and a +2 offset for the hour field. A cron offset string, such as `M+5_H+2`, encodes time adjustments where `M+5` represents a +5 offset in the minute field and `H+2` represents a +2 offset in the hour field. To guarantee uniqueness, the string must follow **Canonical Representation** rules: fields must appear strictly in the order `M` (Minute), `H` (Hour), `d` (DayOfMonth), `m` (Month), `w` (DayOfWeek); all offsets must be expressed as non-negative values, with negative inputs normalized to their positive modular equivalents (e.g., `H-2` becomes `H+22` since -2 mod 24 = 22); fields with zero offsets are omitted for conciseness (so `M+5` is valid, while `M+5_H+0` is not); and the only exception is the **Identity Representation**, denoted as `M+0_H+0_d+0_m+0_w+0`, which explicitly shows zero offsets for all fields."
+  
+  validator: { type: "cron_offset_validator" }
+  sampler: { type: "cron_offset_sampler" }
+
+signature:
+  - name: "Combine Offsets"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "cron_offset_compose_logic" }
+  - name: "Inverse Offset"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "cron_offset_inverse_logic" }
+  - name: "Identity (No Offset)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "M+0_H+0_d+0_m+0_w+0" } }
+
+rules_template: >
+  This system models how schedule adjustments can be combined.
+
+  - **Core Operation ({op_symbol})**: `Offset1 {op_symbol} Offset2` combines two offsets by adding their components independently, each with its own modulus.
+    - **Example**: `'M+50_H+20' {op_symbol} 'M+20_d+1'` results in:
+      - Minute: (50 + 20) mod 60 = 10
+      - Hour: (20 + 0) mod 24 = 20
+      - Day: (0 + 1) mod 31 = 1
+      - Final String: `'d+1_H+20_M+10'` (assuming sorted output)
+
+  - **Inverse (inv)**: `inv(Offset)` is the operation that perfectly cancels the given offset.
+    - **Example**: `inv('M+10_H-4')` results in:
+      - Minute: (-10) mod 60 = 50
+      - Hour: (-(-4)) mod 24 = 4
+      - Final String: `'H+4_M+50'`
+
+  - **How to solve for an unknown offset `Offset1 {op_symbol} x = FinalOffset`**:
+    - **Principle**: `x = inv(Offset1) {op_symbol} FinalOffset`.
+    - **Solving**: `inv('M+10') {op_symbol} 'M+5'` becomes `'M+50' {op_symbol} 'M+5'`, which results in `'M+55'`.
+    - **Interpretation**: If a job's schedule is shifted forward by 10 minutes (`M+10`), but you want the final net shift to be only 5 minutes (`M+5`), you need to apply a further adjustment `x` of `M+55` (which is equivalent to shifting back by 5 minutes).

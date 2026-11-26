@@ -1,0 +1,40 @@
+# Meta-Template: Reversible XOR Data Scrambler
+name: "XOR Data Scrambler System (length {n})"
+description: "An algebraic system based on the bitwise XOR operation. Elements are binary strings of a fixed length {n}, and the core operation is a reversible, bit-by-bit scramble."
+demo_instances:
+  - n: 8 # Simulates a byte
+    op_symbol: "$"
+
+
+set:
+  definition: "All binary strings of length {n}."
+  validator: { type: "regex", params: { pattern: "^[01]{{{n}}}$" } }
+  sampler: { type: "random_string", params: { alphabet: ["0","1"], min_len: "{n}", max_len: "{n}" } }
+
+signature:
+  - name: "Combine"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "bitwise_xor_logic" }
+  - name: "Inverse"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+  
+rules_template: >
+  This system is a foundational model for operations in cryptography and data validation.
+
+  - **Core Operation ({op_symbol})**: `DATA {op_symbol} KEY` performs a bitwise XOR on the two binary strings. This single operation serves as both scrambling and unscrambling.
+    - Example: `'10101010' {op_symbol} '00001111'` results in `'10100101'`.
+
+  - **Inverse Property**: Every element is its own inverse. `inv(A) = A`.
+    - `A {op_symbol} A = e` (where 'e' is the identity element, the all-zero string).
+
+  - **How to solve the equation `A {op_symbol} x = B`**:
+    - **Principle**: Because `A {op_symbol} A = e`, we can apply `A` to both sides of the equation.
+    - `A {op_symbol} (A {op_symbol} x) = A {op_symbol} B`
+    - `(A {op_symbol} A) {op_symbol} x = A {op_symbol} B`
+    - `e {op_symbol} x = A {op_symbol} B`
+    - `x = A {op_symbol} B`
+    - **Solving**: To find `x` in the equation `'10101010' {op_symbol} x = '10100101'`, you would calculate `'10101010' {op_symbol} '10100101'`, which gives the result `'00001111'`.

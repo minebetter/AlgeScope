@@ -1,0 +1,40 @@
+# Meta--Template: Debate Stance Reversal System
+name: "Debate Stance Operation System"
+description: "A system describing operations on a stance taken on an argument. The only operations are 'keep stance' and 'flip stance'."
+demo_instances:
+  - {}
+
+set:
+  definition: "The set contains two operations: 'KEEP' (the identity operation) and 'FLIP' (reversing the stance)."
+  elements: ["KEEP", "FLIP"]
+  validator: { type: "finite_set_validator", params: { elements: ["KEEP", "FLIP"] } }
+  sampler: { type: "finite_set_sampler", params: { elements: ["KEEP", "FLIP"] } }
+
+signature:
+  - name: "Compose Operations"
+    symbol: "->"
+    arity: 2
+    precedence: 1
+    logic:
+      type: "table_lookup_2d"
+      params:
+        elements: ["KEEP", "FLIP"]
+        table: [[0, 1], [1, 0]] # KEEP->KEEP=KEEP, KEEP->FLIP=FLIP, FLIP->KEEP=FLIP, FLIP->FLIP=KEEP
+  - name: "Inverse Operation (Self)"
+    symbol: "inv"
+    arity: 1
+    logic:
+      type: "table_lookup_1d"
+      params:
+        elements: ["KEEP", "FLIP"]
+        table: [0, 1] # inv(KEEP)=KEEP, inv(FLIP)=FLIP
+
+rules_template: >
+  This system models the logic of negation or reversal.
+
+  - **Core Operation (->)**: `FLIP -> FLIP` results in `KEEP`. Flipping a stance twice is equivalent to not changing it at all.
+
+  - **How to solve the equation `FLIP -> x = KEEP`**:
+    - **Principle**: `x = inv(FLIP) -> KEEP`.
+    - **Solving**: Since `inv(FLIP)` is just `FLIP`, the calculation becomes `FLIP -> KEEP`, which results in `FLIP`.
+    - **Interpretation**: If a stance was flipped, but the final outcome is the original stance, a second flip operation must have occurred.

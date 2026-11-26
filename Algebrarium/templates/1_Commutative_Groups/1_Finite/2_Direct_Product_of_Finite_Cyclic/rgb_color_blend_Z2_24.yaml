@@ -1,0 +1,37 @@
+# Meta-Template: RGB Color XOR Blending System
+name: "RGB Color XOR Blending System"
+description: "An algebraic system where elements are RGB colors (0-255). The core operation models the XOR blend mode by performing a bitwise XOR on each color channel."
+demo_instances:
+  - op_symbol: "🎨"
+
+set:
+  definition: "All strings formatted as 'r,g,b', where r, g, and b are integers from 0 to 255."
+  validator: { type: "regex", params: { pattern: "^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d),(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d),(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$" } }
+  sampler: { type: "rgb_color_sampler" }
+
+signature:
+  - name: "XOR Blend"
+    symbol: "{op_symbol}" # or "^"
+    arity: 2
+    precedence: 1
+    logic: { type: "rgb_xor_blend_logic" }
+  - name: "Inverse (Self)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+  - name: "Identity (Black)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "0,0,0" } } # Black color
+
+rules_template: >
+  This system models the 'XOR' blend mode commonly found in graphics software.
+
+  - **Core Operation ({op_symbol})**: `C1 {op_symbol} C2` blends two colors by performing a bitwise XOR operation on their respective R, G, and B channels to produce a new color.
+    - Example: '255,0,0' (Red) {op_symbol} '0,255,0' (Green) results in '255,255,0' (Yellow).
+
+  - **Inverse Property**: Every color is its own inverse. Applying a color's effect twice cancels it out, since `C {op_symbol} C = '0,0,0'` (Black, the identity element).
+
+  - **How to solve the equation `Layer1 {op_symbol} x = Final_Color`**:
+    - **Principle**: Just as with an XOR scrambler, the solution is `x = Layer1 {op_symbol} Final_Color`.
+    - **Solving**: If you know the color of one layer (`Layer1`) and the final blended color (`Final_Color`), you can precisely calculate the color of the other unknown layer (`x`).

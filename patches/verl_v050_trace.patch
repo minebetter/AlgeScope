@@ -1,0 +1,43 @@
+--- a/verl/workers/rollout/vllm_rollout/vllm_rollout_spmd.py
++++ b/verl/workers/rollout/vllm_rollout/vllm_rollout_spmd.py
+@@ -327,11 +327,18 @@
+             # if n = 1: (bs, response_length) ; if n > 1: (bs * n, response_length)
+ 
+             response = []
++            algescope_traces = []
+             rollout_log_probs = []
+             for output in outputs:
+                 for sample_id in range(len(output.outputs)):
+                     response_ids = output.outputs[sample_id].token_ids
+                     response.append(response_ids)
++                    completion = output.outputs[sample_id]
++                    algescope_traces.append(__import__("json").dumps({
++                        "response_token_count": len(response_ids),
++                        "finish_reason": completion.finish_reason,
++                        "stop_reason": completion.stop_reason,
++                    }))
+                     if self.config.calculate_log_probs:
+                         curr_log_prob = []
+                         for i, logprob in enumerate(output.outputs[sample_id].logprobs):
+@@ -381,6 +388,7 @@
+             # we will recompute old log prob with actor
+             batch["rollout_log_probs"] = rollout_log_probs
+ 
++        non_tensor_batch["algescope_trace"] = np.asarray(algescope_traces, dtype=object)
+         return DataProto(batch=batch, non_tensor_batch=non_tensor_batch)
+ 
+ 
+--- a/verl/workers/reward_manager/naive.py
++++ b/verl/workers/reward_manager/naive.py
+@@ -76,7 +76,10 @@
+ 
+             ground_truth = data_item.non_tensor_batch["reward_model"]["ground_truth"]
+             data_source = data_item.non_tensor_batch[self.reward_fn_key]
+-            extra_info = data_item.non_tensor_batch.get("extra_info", {})
++            from algescope.training.trace import prepare_score_inputs
++            response_str, extra_info = prepare_score_inputs(
++                self.tokenizer, valid_prompt_ids, response_ids, data_item.non_tensor_batch
++            )
+             num_turns = data_item.non_tensor_batch.get("__num_turns__", None)
+             extra_info["num_turns"] = num_turns
+ 

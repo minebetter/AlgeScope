@@ -1,0 +1,44 @@
+# Meta-Template: Chess Move Vector System
+name: "Chessboard Move Vector System (Z×Z)"
+description: "A system where elements are relative move vectors (Δcol, Δrow) on a chessboard."
+demo_instances:
+  - {}
+
+set:
+  definition: "A string like '(+Δcol,+Δrow)' representing a relative move vector. For example, a knight's move could be '(+1,+2)'."
+  validator: { type: "chess_vector_validator" }
+  sampler:
+    type: "chess_vector_sampler"
+    params:
+      # Chess board is 8x8, so max move is 7 steps
+      max_abs_val: 7
+
+signature:
+  - name: "Combine Moves (Vector Addition)"
+    symbol: "+"
+    arity: 2
+    precedence: 1
+    logic: { type: "vector_add_logic" }
+  - name: "Reverse Move (Additive Inverse)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "vector_inverse_logic" }
+  - name: "Identity (No Move)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "(+0,+0)" } } # Use canonical format
+
+rules_template: >
+  This system models the composition of relative movements on a grid, equivalent to integer vector addition.
+
+  - **Core Operation (+)**: `V1 + V2` adds the corresponding components of the two move vectors.
+    - **Example**: A knight's move `(+1,+2)` followed by a bishop's move `(+3,+3)` results in a net displacement of `(+4,+5)`.
+
+  - **Inverse (neg)**: `neg(V)` is the move that takes you from the destination of V precisely back to the start.
+    - **Example**: `neg('(+2,-1)')` is `'(-2,+1)'`.
+
+  - **How to solve for an unknown move `Move1 + x = Move2`**:
+    - **Principle**: `x = neg(Move1) + Move2`.
+    - **Solving**: A knight's move from e4 to g5 is `Move1`=`(+2,+1)`. The desired final net displacement is `Move2`=`(+1,-1)`.
+    - **Calculation**: `x = neg('(+2,+1)') + '(+1,-1)'` becomes `'(-2,-1)' + '(+1,-1)'`, which results in `'(-1,-2)'`.
+    - **Interpretation**: After the initial knight's move, you need to make one more move of `(-1,-2)` (a backwards knight's move) to reach the final target position relative to your starting square.

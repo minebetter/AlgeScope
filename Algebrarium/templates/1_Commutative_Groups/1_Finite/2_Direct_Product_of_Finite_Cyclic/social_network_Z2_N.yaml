@@ -1,0 +1,41 @@
+# Meta-Template: Social Network Friendship Toggle System
+name: "Social Network Friendship Toggle System"
+description: "A system where an element is an 'add/remove friend pair' operation. The composition of operations merges these changes, where applying the same operation twice cancels it out."
+demo_instances:
+  - op_symbol: "sync"
+
+set:
+  definition: "A comma-separated, alphabetized string of friend pairs, like 'ann-bob,carl-dave', representing user pairs whose friendship status needs to be toggled."
+  
+  validator: { type: "sorted_pair_list_validator" }
+  sampler:
+    type: "friend_pair_sampler"
+    params:
+      names: ["ann", "bob", "carl", "dave", "eli", "fay", "grace"]
+      min_pairs: 0
+      max_pairs: 3
+
+signature:
+  - name: "Combine Operations"
+    symbol: "{op_symbol}"
+    arity: 2
+    precedence: 1
+    logic: { type: "set_symmetric_difference_logic", params: { separator: "," } }
+  - name: "Inverse Operation (Self)"
+    symbol: "inv"
+    arity: 1
+    logic: { type: "self_inverse_logic" }
+  - name: "Identity (No Change)"
+    symbol: "e"
+    arity: 0
+    logic: { type: "constant_value", params: { value: "" } }
+
+rules_template: >
+  This system models state {op_symbol}hronization where every operation is its own inverse.
+
+  - **Core Operation ({op_symbol})**: `Op1 {op_symbol} Op2` combines two lists of operations. If a friend pair appears in both lists, it's removed from the result (because its status was toggled twice).
+    - Example: `'ann-bob,carl-dave' {op_symbol} 'carl-dave,eli-fay'` results in `'ann-bob,eli-fay'`.
+
+  - **How to solve for an unknown operation `Op_known {op_symbol} x = Op_final`**:
+    - **Principle**: Since every element is its own inverse, the solution is `x = Op_known {op_symbol} Op_final`.
+    - **Solving**: If you know a {op_symbol} patch `Op_known` was applied, and the final net change is `Op_final`, you can precisely calculate the second patch `x` that must have been applied.

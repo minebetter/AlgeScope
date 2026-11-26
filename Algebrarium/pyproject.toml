@@ -1,0 +1,58 @@
+# pyproject.toml
+
+[build-system]
+# 这些是构建包所必需的工具
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# --- 核心元数据 ---
+name = "algebrarium"
+version = "0.1.0"
+authors = [
+  { name="Zhilin Wang", email="zhilin.nlp@gmail.com" },
+]
+description = "A Python framework for generating and exploring formal algebraic systems from declarative YAML templates."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Code Generators",
+]
+
+# --- 依赖项 ---
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Linzwcs/Algebraic-Sandbox"
+#"Bug Tracker" = "https://github.com/yourusername/the-algebrarium/issues"
+
+# --- 命令行脚本 ---
+# 这会将 src/algebrarium/cli.py 中的 run_all_demos 函数
+# 变成一个名为 algebrarium-demo 的可执行命令
+[project.scripts]
+algebrarium-demo = "algebrarium.cli:run_all_demos"
+
+
+# --- Setuptools 特定配置 ---
+[tool.setuptools]
+# 允许 setuptools 自动发现 src/ 目录下的包
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- 包含数据文件 (templates) ---
+# 这是最关键的部分之一！
+# 它告诉 setuptools 在 algebrarium 包内查找 templates 目录，
+# 并递归地包含所有的 .yaml 和 .yml 文件。
+[tool.setuptools.package-data]
+algebrarium = ["templates/**/*.yaml", "templates/**/*.yml"]
